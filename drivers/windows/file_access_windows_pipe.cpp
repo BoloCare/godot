@@ -33,6 +33,7 @@
 #include "file_access_windows_pipe.h"
 
 #include "core/string/ustring.h"
+#include "drivers/windows/app_container_windows.h"
 
 #include <winbase.h>
 

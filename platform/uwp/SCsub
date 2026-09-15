@@ -1,0 +1,21 @@
+#!/usr/bin/env python
+from misc.utility.scons_hints import *
+
+Import("env")
+
+sources = [
+    "os_uwp.cpp",
+]
+
+# The CoreApplication host, the dispatcher pump and the ApplicationData paths are C++/WinRT,
+# which needs C++20 and exceptions; the rest of the engine keeps its own flags.
+env_winrt = env.Clone()
+if "/std:c++17" in env_winrt["CXXFLAGS"]:
+    env_winrt["CXXFLAGS"].remove("/std:c++17")
+env_winrt.Append(CXXFLAGS=["/std:c++20", "/EHsc"])
+env_winrt["CPPDEFINES"] = [
+    d for d in env_winrt["CPPDEFINES"] if not (isinstance(d, tuple) and d[0] == "_HAS_EXCEPTIONS")
+]
+env_winrt.add_source_files(sources, ["godot_uwp.cpp", "display_server_uwp.cpp", "uwp_winrt.cpp"])
+
+prog = env.add_program("#bin/godot", sources, PROGSUFFIX=env["PROGSUFFIX"])

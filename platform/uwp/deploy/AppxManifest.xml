@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The package manifest for a Godot UWP build; build.ps1 copies it beside godot.exe and packs it. -->
+<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+         xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+         IgnorableNamespaces="uap">
+  <Identity Name="BoloCare.Godot" Publisher="CN=BoloCareGodot" Version="4.7.2.0" ProcessorArchitecture="arm64" />
+  <Properties>
+    <DisplayName>Godot</DisplayName>
+    <PublisherDisplayName>BoloCare</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.17763.0" MaxVersionTested="10.0.22621.0" />
+    <PackageDependency Name="Microsoft.VCLibs.140.00" MinVersion="14.0.24217.0" Publisher="CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US" />
+  </Dependencies>
+  <Resources>
+    <Resource Language="en-us" />
+  </Resources>
+  <Applications>
+    <Application Id="App" Executable="godot.exe" EntryPoint="BoloCare.Godot.App">
+      <uap:VisualElements DisplayName="Godot" Description="Godot Engine"
+                          Square150x150Logo="Assets\Logo.png" Square44x44Logo="Assets\SmallLogo.png" BackgroundColor="transparent" />
+    </Application>
+  </Applications>
+  <Capabilities>
+    <Capability Name="internetClient" />
+  </Capabilities>
+</Package>
