@@ -37,6 +37,8 @@
 #include <cstdlib>
 
 #ifdef WINDOWS_ENABLED
+#include "drivers/windows/app_container_windows.h"
+
 #include <windows.h>
 
 #define ENV_PATH_SEP ";"

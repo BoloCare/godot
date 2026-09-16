@@ -1,0 +1,19 @@
+<Project>
+  <!--
+  Imported from Sdk.targets ahead of Microsoft.NET.Sdk's targets, which is the one place a target
+  framework can still be replaced: the project body has already set its own (net8.0 or so), and
+  Microsoft.NET.Sdk's TargetFrameworkInference has not read it yet. UseUwp needs a windows10 TFM.
+  A project that already targets windows10 keeps it.
+  -->
+  <PropertyGroup Condition=" !$(TargetFramework.Contains('-windows10.')) ">
+    <TargetFramework>$(GodotUwpTargetFramework)</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <TrimmerRootAssembly Include="GodotSharp" Condition="'$(EnableGodotDotNetPreview)' != 'true' and '$(DisableImplicitGodotSharpReferences)' != 'true'" />
+    <TrimmerRootAssembly Include="Godot.Bindings" Condition="'$(EnableGodotDotNetPreview)' == 'true'" />
+    <TrimmerRootAssembly Include="$(MSBuildProjectName)" />
+    <!-- Mark the library as app-container clean, as the engine itself is linked. -->
+    <LinkerArg Include="/APPCONTAINER" />
+  </ItemGroup>
+</Project>

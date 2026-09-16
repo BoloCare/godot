@@ -15,7 +15,11 @@ func _init() -> void:
 		push_error("pack.gd: cannot write %s (%d)" % [args[0], err])
 		quit(1)
 		return
-	for f in ["project.godot", "main.tscn", "main.gd"]:
+	# Everything in the project directory but the C# project files, which an export would not ship
+	# either. The .cs files do go in: a C# script resource is found by its res:// path.
+	for f in DirAccess.get_files_at("res://"):
+		if f.get_extension() in ["csproj", "sln"]:
+			continue
 		packer.add_file("res://" + f, "res://" + f)
 	packer.flush(true)
 	print("packed ", args[0])
