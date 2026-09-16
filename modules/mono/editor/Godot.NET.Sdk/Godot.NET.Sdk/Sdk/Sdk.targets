@@ -1,4 +1,7 @@
 <Project>
+  <!-- Before Microsoft.NET.Sdk's targets on purpose: UWP.targets replaces the target framework, see there. -->
+  <Import Project="$(MSBuildThisFileDirectory)\UWP.targets" Condition=" '$(GodotTargetPlatform)' == 'uwp' " />
+
   <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.targets" Condition="'$(GodotSdkImportsMicrosoftNetSdk)' == 'true'" />
 
   <PropertyGroup>

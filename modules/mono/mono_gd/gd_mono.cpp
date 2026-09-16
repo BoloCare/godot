@@ -186,7 +186,11 @@ String find_hostfxr() {
 	return String();
 #else
 
-#if defined(WINDOWS_ENABLED)
+#if defined(UWP_ENABLED)
+	// An app container has no hostfxr, hostpolicy or coreclr: the only .NET that runs on the
+	// HoloLens 2 is the NativeAOT library, which initialize() falls back to when nothing is found.
+	String probe_path;
+#elif defined(WINDOWS_ENABLED)
 	String probe_path = GodotSharpDirs::get_api_assemblies_dir()
 								.path_join("hostfxr.dll");
 #elif defined(MACOS_ENABLED)
@@ -215,7 +219,9 @@ String find_monosgen() {
 	// so we assume it exists and use only the name to dlopen it.
 	return "libmonosgen-2.0.so";
 #else
-#if defined(WINDOWS_ENABLED)
+#if defined(UWP_ENABLED)
+	String probe_path; // NativeAOT only, see find_hostfxr().
+#elif defined(WINDOWS_ENABLED)
 	String probe_path = GodotSharpDirs::get_api_assemblies_dir()
 								.path_join("monosgen-2.0.dll");
 #elif defined(MACOS_ENABLED)
@@ -237,7 +243,9 @@ String find_monosgen() {
 }
 
 String find_coreclr() {
-#if defined(WINDOWS_ENABLED)
+#if defined(UWP_ENABLED)
+	String probe_path; // NativeAOT only, see find_hostfxr().
+#elif defined(WINDOWS_ENABLED)
 	String probe_path = GodotSharpDirs::get_api_assemblies_dir()
 								.path_join("coreclr.dll");
 #elif defined(MACOS_ENABLED)

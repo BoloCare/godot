@@ -91,7 +91,7 @@ def get_doc_path():
 def get_flags():
     return {
         "arch": "arm64",
-        "supported": ["d3d12"],
+        "supported": ["d3d12", "mono"],
         # No rendering, input or audio drivers yet; a later card adds D3D12 on a CoreWindow.
         "vulkan": False,
         "opengl3": False,

@@ -29,6 +29,7 @@ namespace GodotTools.Utils
             public const string Android = "Android";
             public const string iOS = "iOS";
             public const string Web = "Web";
+            public const string UWP = "UWP";
         }
 
         /// <summary>
@@ -42,6 +43,7 @@ namespace GodotTools.Utils
             public const string Android = "android";
             public const string iOS = "ios";
             public const string Web = "web";
+            public const string UWP = "uwp";
         }
 
         /// <summary>
@@ -71,7 +73,8 @@ namespace GodotTools.Utils
             ["Linux"] = Platforms.LinuxBSD,
             ["Android"] = Platforms.Android,
             ["iOS"] = Platforms.iOS,
-            ["Web"] = Platforms.Web
+            ["Web"] = Platforms.Web,
+            ["UWP"] = Platforms.UWP
         };
 
         public static readonly Dictionary<string, string> PlatformNameMap = new Dictionary<string, string>
@@ -84,7 +87,8 @@ namespace GodotTools.Utils
             [Names.BSD] = Platforms.LinuxBSD,
             [Names.Android] = Platforms.Android,
             [Names.iOS] = Platforms.iOS,
-            [Names.Web] = Platforms.Web
+            [Names.Web] = Platforms.Web,
+            [Names.UWP] = Platforms.UWP
         };
 
         public static readonly Dictionary<string, string> DotNetOSPlatformMap = new Dictionary<string, string>
@@ -98,7 +102,9 @@ namespace GodotTools.Utils
             [Platforms.LinuxBSD] = DotNetOS.Linux,
             [Platforms.Android] = DotNetOS.Android,
             [Platforms.iOS] = DotNetOS.iOS,
-            [Platforms.Web] = DotNetOS.Browser
+            [Platforms.Web] = DotNetOS.Browser,
+            // UWP on .NET 9+ is the plain `win` RID with a windows10 TFM and UseUwp=true (Sdk/UWP.props).
+            [Platforms.UWP] = DotNetOS.Win
         };
         private static bool IsOS(string name)
         {

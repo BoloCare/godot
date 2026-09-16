@@ -1,0 +1,22 @@
+; The .NET twin of ../project: Main.cs prints from _Ready and quits, proving the NativeAOT
+; library in data_BootDotNet_uwp_arm64/ was loaded and the script class in it found. Hand-packed
+; by build-dotnet.ps1, so what an export would write is spelled out here: "dotnet" under
+; _custom_features is the tag GDMono::should_initialize() looks for.
+
+config_version=5
+
+_custom_features="dotnet"
+
+[application]
+
+config/name="BootDotNet"
+run/main_scene="res://main.tscn"
+config/features=PackedStringArray("4.7", "C#")
+
+[dotnet]
+
+project/assembly_name="BootDotNet"
+
+[rendering]
+
+renderer/rendering_method="dummy"

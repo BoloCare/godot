@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-Packs a built UWP Godot (bin\godot.uwp.<target>.arm64.exe) and the boot-check project into a signed appx.
+Packs a built UWP Godot (bin\godot.uwp.<target>.arm64[.mono].exe) and a boot-check project into a signed appx.
 
 .DESCRIPTION
 No MSBuild, no .vcxproj. Expects the engine already built with
@@ -13,17 +13,26 @@ No MSBuild, no .vcxproj. Expects the engine already built with
   3. makeappx packs it and signtool signs it with a self-signed test certificate made on first
      use (deps\godot.pfx, git-ignored; deps\godot.cer goes to the device with the package).
 Output: out\godot.appx and out\godot.cer beside this script. run.ps1 installs them.
+
+-DotNet packs project-dotnet\ with the mono template (scons ... module_mono_enabled=yes) instead,
+and publishes its C# project the way the editor's export does:
+  dotnet publish -c ExportDebug -r win-arm64 --self-contained true -p:GodotTargetPlatform=uwp
+which, through this checkout's Godot.NET.Sdk (Sdk\UWP.props and UWP.targets), is one NativeAOT
+BootDotNet.dll; it goes into the package as data_BootDotNet_uwp_arm64\, where the engine looks for
+it. ILCompiler finds the arm64 linker through vswhere, so the VS installer directory is put on PATH.
 #>
 param(
     [string]$Target = 'template_debug',
-    [string]$Godot = ''
+    [string]$Godot = '',
+    [switch]$DotNet
 )
 
 $ErrorActionPreference = 'Stop'
 $here = $PSScriptRoot
 $root = Resolve-Path (Join-Path $here '..\..\..')
-$exe = Join-Path $root "bin\godot.uwp.$Target.arm64.exe"
-if (-not (Test-Path $exe)) { throw "no ${exe}: build the engine first (scons platform=uwp target=$Target)" }
+$exe = Join-Path $root "bin\godot.uwp.$Target.arm64$(if ($DotNet) { '.mono' }).exe"
+if (-not (Test-Path $exe)) { throw "no ${exe}: build the engine first (scons platform=uwp target=$Target$(if ($DotNet) { ' module_mono_enabled=yes' }))" }
+$project = Join-Path $here $(if ($DotNet) { 'project-dotnet' } else { 'project' })
 
 $out = Join-Path $here 'out'
 $deps = Join-Path $here 'deps'
@@ -36,7 +45,7 @@ if (-not $Godot) {
 if (-not $Godot -or -not (Test-Path $Godot)) { throw 'no desktop Godot 4.7 to pack with: pass -Godot <path to a Godot 4.7 console exe>' }
 $pck = Join-Path $out 'godot.pck'
 if (Test-Path $pck) { Remove-Item $pck }
-& $Godot --headless --path (Join-Path $here 'project') -s ../pack.gd -- $pck | Out-Null
+& $Godot --headless --path $project -s ../pack.gd -- $pck | Out-Null
 if (-not (Test-Path $pck)) { throw 'pack.gd did not write godot.pck' }
 
 # 2. The package layout.
@@ -45,6 +54,33 @@ if (Test-Path $pkg) { Remove-Item $pkg -Recurse -Force }
 New-Item -ItemType Directory -Force "$pkg\Assets" | Out-Null
 Copy-Item $exe "$pkg\godot.exe"
 Copy-Item $pck, (Join-Path $here 'AppxManifest.xml') $pkg
+
+# 2b. The NativeAOT library, published with the editor's own arguments. The project imports the
+# Sdk by path (GodotSdkDir) so the Sdk under test is this checkout's, not the NuGet one; the Sdk
+# needs SdkPackageVersions.props beside it, which build_assemblies.py generates from version.py.
+if ($DotNet) {
+    $sdk = Join-Path $out 'sdk'
+    if (Test-Path $sdk) { Remove-Item $sdk -Recurse -Force }
+    Copy-Item (Join-Path $root 'modules\mono\editor\Godot.NET.Sdk\Godot.NET.Sdk\Sdk') $sdk -Recurse
+    Push-Location (Join-Path $root 'modules\mono')
+    try {
+        python -c "import sys; sys.path.insert(0, 'build_scripts'); import build_assemblies; build_assemblies.generate_sdk_package_versions()"
+        if ($LASTEXITCODE) { throw "generate_sdk_package_versions failed ($LASTEXITCODE)" }
+    } finally { Pop-Location }
+    Copy-Item (Join-Path $root 'modules\mono\SdkPackageVersions.props') $sdk
+    $env:PATH += ";${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer"
+    $publish = Join-Path $out 'publish'
+    if (Test-Path $publish) { Remove-Item $publish -Recurse -Force }
+    $csproj = Get-ChildItem $project -Filter *.csproj | Select-Object -First 1
+    Write-Host "publishing $($csproj.Name) for win-arm64 under NativeAOT"
+    & dotnet publish $csproj.FullName -c $(if ($Target -eq 'template_release') { 'ExportRelease' } else { 'ExportDebug' }) -r win-arm64 --self-contained true `
+        -p:GodotTargetPlatform=uwp "-p:GodotSdkDir=$sdk\" -o $publish -nologo -v:m -clp:ErrorsOnly
+    if ($LASTEXITCODE) { throw "dotnet publish failed ($LASTEXITCODE)" }
+    $data = Join-Path $pkg "data_$($csproj.BaseName)_uwp_arm64"
+    New-Item -ItemType Directory $data | Out-Null
+    # The .pdb stays out: 70 MB the package has no use for (the export's include_debug_symbols option).
+    Get-ChildItem $publish -File | Where-Object Extension -ne '.pdb' | Copy-Item -Destination $data
+}
 Add-Type -AssemblyName System.Drawing
 foreach ($logo in @(@('StoreLogo.png', 50), @('Logo.png', 150), @('SmallLogo.png', 44))) {
     $bmp = [System.Drawing.Bitmap]::new($logo[1], $logo[1])

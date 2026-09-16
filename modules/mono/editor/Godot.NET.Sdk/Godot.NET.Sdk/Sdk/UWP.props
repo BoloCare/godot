@@ -1,0 +1,18 @@
+<Project>
+  <!--
+  UWP (HoloLens 2) exports run one NativeAOT library, data_<name>_uwp_arm64/<name>.dll: an app
+  container has no hostfxr or coreclr, and can only load DLLs that ship inside its package. The
+  engine finds script classes and their members by reflection (ScriptManagerBridge), which the
+  trimmer cannot follow, so the game assembly and GodotSharp are rooted whole in UWP.targets.
+  -->
+  <PropertyGroup>
+    <PublishAot>true</PublishAot>
+    <NativeLib>Shared</NativeLib>
+    <UseUwp>true</UseUwp>
+    <SelfContained>true</SelfContained>
+    <IlcGenerateStackTraceData>true</IlcGenerateStackTraceData>
+    <TrimmerSingleWarn>false</TrimmerSingleWarn>
+    <!-- The TFM is forced in UWP.targets: a value here would lose to the project's own. -->
+    <GodotUwpTargetFramework Condition=" '$(GodotUwpTargetFramework)' == '' ">net10.0-windows10.0.26100</GodotUwpTargetFramework>
+  </PropertyGroup>
+</Project>

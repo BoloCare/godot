@@ -1,0 +1,11 @@
+<!-- A real project says <Project Sdk="Godot.NET.Sdk/4.7.2">. This one imports the same two files
+     out of this checkout so the fork's Sdk/UWP.props and UWP.targets are what gets tested;
+     build-dotnet.ps1 stages them (with the generated SdkPackageVersions.props) and sets GodotSdkDir. -->
+<Project>
+  <Import Project="$(GodotSdkDir)Sdk.props" />
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+  </PropertyGroup>
+  <Import Project="$(GodotSdkDir)Sdk.targets" />
+</Project>
