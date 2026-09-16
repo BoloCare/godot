@@ -81,7 +81,9 @@ def get_opts():
 
 
 def get_doc_classes():
-    return []
+    return [
+        "EditorExportPlatformUWP",
+    ]
 
 
 def get_doc_path():

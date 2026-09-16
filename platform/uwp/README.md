@@ -46,10 +46,10 @@ shared library, `data_<name>_uwp_arm64\<name>.dll` beside `godot.exe`. What make
   as a shared object under `data_<name>_uwp_arm64/`. The UWP `EditorExportPlatform` (E5) has to
   write those into the package next to the executable, as `EditorExportPlatformPC` does.
 
-Neither the stock editor's `GodotTools.dll` nor the NuGet `Godot.NET.Sdk/4.7.2` has these, so
-exporting from an editor needs this checkout's `GodotTools.dll` dropped into the editor's
-`GodotSharp/Tools/` and the Sdk from `modules/mono/editor/Godot.NET.Sdk` on a feed — a packaging
-question for the CI card, not answered here.
+An editor built from this checkout (below) carries this `GodotTools.dll`; the Sdk it hands
+`dotnet publish` still comes from NuGet, so it must be on a feed: `build_assemblies.py
+--push-nupkgs-local <dir>` writes the `Godot.NET.Sdk` nupkg to a local source, replacing the
+stock 4.7.2 package in the NuGet cache.
 
     scons platform=uwp target=template_debug module_mono_enabled=yes
     pwsh platform/uwp/deploy/build.ps1 -DotNet
@@ -59,6 +59,38 @@ packs `deploy/project-dotnet` (a `_Ready` in `Main.cs` that prints a `BOOT:` lin
 its NativeAOT library, and the headset's log ends in
 `BOOT: C# on Godot 4.7.2-stable (custom_build), UWP 10.0.22621.1560 (HoloLens 2), NativeAOT, 10.0.2`.
 The library is ~30 MB (the .NET 10 runtime and GodotSharp, untrimmed) and takes a minute to build.
+
+## Exporting from the editor (platform/uwp/export)
+
+`EditorExportPlatformUWP` is the "UWP" preset in an editor built from this checkout. An export
+platform is compiled into the editor, so the stock 4.7.2 editor never lists it:
+
+    scons platform=windows target=editor module_mono_enabled=yes
+    bin\godot.windows.editor.x86_64.mono.exe --headless --generate-mono-glue modules/mono/glue
+    python modules/mono/build_scripts/build_assemblies.py --godot-output-dir bin --push-nupkgs-local <feed dir>
+
+The template it reads is `uwp_arm64_debug.zip` / `uwp_arm64_release.zip` in the editor's export
+templates directory (`%APPDATA%\Godot\export_templates\4.7.2.stable.mono\`), or the preset's
+`custom_template/*`: `godot.exe` (the arm64 build), `AppxManifest.xml` with `$placeholders$` and
+the default logos, from `misc/dist/uwp_template`. `deploy/template.ps1 [-DotNet] [-Install]` zips a
+built template and installs it there.
+
+The export writes the appx itself (`app_packager.cpp`: the zip, `AppxBlockMap.xml`,
+`[Content_Types].xml`): `godot.exe`, the manifest filled in from the preset, the project as
+`godot.pck` beside the exe, every shared object export plugins add (the C# library under
+`data_<name>_uwp_arm64/`) and `__cl__.cl`, the preset's `command_line/extra_args` plus the
+editor's remote-debug flags, which `godot_uwp.cpp` reads at start. Then `signtool sign /fd SHA256`
+with the preset's `signing/certificate` (`.pfx`; `GODOT_UWP_SIGNING_CERTIFICATE` /
+`GODOT_UWP_SIGNING_PASSWORD` override the preset), found in the newest Windows SDK unless
+`export/uwp/signtool` is set in the editor settings. The certificate's subject must be the
+preset's `package/publisher`; without a certificate the appx is written unsigned, which no
+device installs. Installing on a HoloLens takes the appx, its `.cer` and the arm64
+`Microsoft.VCLibs` appx through Device Portal (`deploy/run.ps1` does that for `build.ps1`'s
+package).
+
+Capabilities are export options: `internetClient` and `internetClientServer` default on (mr's
+`--drive` listens on the USB NIC); `privateNetworkClientServer`, `spatialPerception`, `microphone`,
+`webcam`, `bluetooth`, `location` and `gazeInput` default off.
 
 ## Building
 
@@ -74,6 +106,7 @@ run `VsDevCmd.bat -arch=arm64 -host_arch=x64 -app_platform=UWP`. The Windows SDK
     pwsh platform/uwp/deploy/run.ps1 -Password <device portal password>
 
 `build.ps1` packs `deploy/project` (a scene whose `_ready` prints a `BOOT:` line and quits) with a
-desktop Godot 4.7 through `PCKPacker`, lays out `godot.exe` + `godot.pck` + `AppxManifest.xml`,
-and signs with a self-signed test certificate it makes on first use. `run.ps1` installs the appx
+desktop Godot 4.7 through `PCKPacker`, lays out `godot.exe` + `godot.pck` + `AppxManifest.xml`
+(no `__cl__.cl`, so the app runs with no arguments), and signs with a self-signed test certificate
+it makes on first use. `run.ps1` installs the appx
 through Device Portal over the USB cable, launches it, and prints `LocalState\godot.log`.
