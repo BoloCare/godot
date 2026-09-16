@@ -35,6 +35,7 @@
 #include "core/os/memory.h"
 #include "core/os/os.h"
 #include "core/string/print_string.h"
+#include "drivers/windows/app_container_windows.h"
 #include "drivers/windows/file_access_windows.h"
 
 #include <windows.h>
@@ -413,6 +414,9 @@ String DirAccessWindows::get_filesystem_type() const {
 }
 
 bool DirAccessWindows::is_case_sensitive(const String &p_path) const {
+#ifdef UWP_ENABLED
+	return false; // ntdll is out of reach; package and sandbox folders are case-insensitive.
+#else
 	String f = fix_path(p_path);
 
 	HANDLE h_file = ::CreateFileW((LPCWSTR)(f.utf16().get_data()), 0,
@@ -433,6 +437,7 @@ bool DirAccessWindows::is_case_sensitive(const String &p_path) const {
 	} else {
 		return false;
 	}
+#endif
 }
 
 typedef struct {
@@ -499,6 +504,9 @@ String DirAccessWindows::read_link(String p_file) {
 }
 
 Error DirAccessWindows::create_link(String p_source, String p_target) {
+#ifdef UWP_ENABLED
+	return ERR_UNAVAILABLE; // CreateSymbolicLinkW is not in the app partition.
+#else
 	String source = fix_path(p_source);
 	String target = fix_path(p_target);
 
@@ -511,6 +519,7 @@ Error DirAccessWindows::create_link(String p_source, String p_target) {
 	} else {
 		return FAILED;
 	}
+#endif
 }
 
 DirAccessWindows::DirAccessWindows() {

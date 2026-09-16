@@ -1,0 +1,14 @@
+; A project small enough to prove the package pck is read: main.gd prints and quits. No renderer
+; exists on UWP yet, so the rendering method is "dummy" (what --headless picks).
+
+config_version=5
+
+[application]
+
+config/name="Godot UWP boot check"
+run/main_scene="res://main.tscn"
+config/features=PackedStringArray("4.7")
+
+[rendering]
+
+renderer/rendering_method="dummy"
