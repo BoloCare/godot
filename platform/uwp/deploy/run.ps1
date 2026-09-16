@@ -18,15 +18,20 @@ The password is not in the repo: pass it, or set HOLOLENS_PORTAL_PASSWORD (and _
 param(
     [string]$Portal = 'http://localhost:10080',
     [string]$User = $(if ($env:HOLOLENS_PORTAL_USER) { $env:HOLOLENS_PORTAL_USER } else { 'dev' }),
-    [string]$Password = $env:HOLOLENS_PORTAL_PASSWORD
+    [string]$Password = $env:HOLOLENS_PORTAL_PASSWORD,
+    # The package to install: build.ps1's by default, or an editor export with its certificate
+    # and the manifest's identity name.
+    [string]$Appx = (Join-Path $PSScriptRoot 'out\godot.appx'),
+    [string]$Cer = (Join-Path $PSScriptRoot 'out\godot.cer'),
+    [string]$Name = 'BoloCare.Godot'
 )
 if (-not $Password) { throw 'no Device Portal password: -Password or HOLOLENS_PORTAL_PASSWORD' }
 
 $ErrorActionPreference = 'Stop'
 $out = Join-Path $PSScriptRoot 'out'
-$appx = Join-Path $out 'godot.appx'
-$cer = Join-Path $out 'godot.cer'
-if (-not (Test-Path $appx)) { throw "no ${appx}: run build.ps1 first" }
+$appx = $Appx
+$cer = $Cer
+if (-not (Test-Path $appx)) { throw "no ${appx}: run build.ps1 first, or pass -Appx" }
 $vclibs = Get-ChildItem "${env:ProgramFiles(x86)}\Microsoft SDKs\Windows Kits\10\ExtensionSDKs\Microsoft.VCLibs\14.0\Appx\Retail\ARM64\*.appx" | Select-Object -First 1
 if (-not $vclibs) { throw 'no arm64 Microsoft.VCLibs appx under the Windows SDK ExtensionSDKs' }
 
@@ -38,7 +43,7 @@ function Portal($method, $path, $curlArgs = @()) {
     [pscustomobject]@{ Code = [int]$lines[-1]; Body = ($lines[0..($lines.Length - 2)] -join "`n") }
 }
 
-$name = 'BoloCare.Godot'
+$name = $Name
 $existing = (Portal GET '/api/app/packagemanager/packages').Body | ConvertFrom-Json
 $old = $existing.InstalledPackages | Where-Object PackageFullName -like "${name}_*"
 if ($old) {
@@ -47,8 +52,9 @@ if ($old) {
 }
 
 Write-Host "installing $appx with $($vclibs.Name) and the test certificate"
-$r = Portal POST "/api/app/packagemanager/package?package=godot.appx" @(
-    '-F', "godot.appx=@$appx;type=application/octet-stream",
+$leaf = Split-Path $appx -Leaf
+$r = Portal POST "/api/app/packagemanager/package?package=$leaf" @(
+    '-F', "$leaf=@$appx;type=application/octet-stream",
     '-F', "dependency=@$($vclibs.FullName);filename=$($vclibs.Name);type=application/octet-stream",
     '-F', "certificate=@$cer;type=application/octet-stream")
 if ($r.Code -notin 200, 202) { throw "install POST returned $($r.Code): $($r.Body)" }
@@ -99,6 +105,7 @@ if ($r.Code -ne 200) {
     if ($dumps) { Write-Warning "no godot.log, but the package left a crash dump: $($dumps[0].FileName)" }
     throw "no godot.log ($($r.Code)): $($r.Body)"
 }
+New-Item -ItemType Directory -Force $out | Out-Null
 $log = Join-Path $out 'godot.log'
 $r.Body | Set-Content $log
 Write-Host "---- godot.log ($log)"

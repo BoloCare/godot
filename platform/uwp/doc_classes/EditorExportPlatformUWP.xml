@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="EditorExportPlatformUWP" inherits="EditorExportPlatform" api_type="editor" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../class.xsd">
+	<brief_description>
+		Exporter for UWP (HoloLens 2).
+	</brief_description>
+	<description>
+		Exports the project as an [code].appx[/code] package for the HoloLens 2 (UWP, arm64): the template's [code]godot.exe[/code], the project as [code]godot.pck[/code] beside it, any shared objects export plugins add (the C# NativeAOT library) and the command line in [code]__cl__.cl[/code]. The package is signed with [code]signtool[/code] from the Windows SDK, found by itself unless [code]export/uwp/signtool[/code] is set in the Editor Settings, using the certificate in [member signing/certificate]; its subject must be [member package/publisher]. Installing the package on a device also needs its certificate trusted there and the arm64 [code]Microsoft.VCLibs[/code] framework.
+	</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="binary_format/architecture" type="String" setter="" getter="">
+			Package architecture. Only [code]arm64[/code], the HoloLens 2, is built.
+		</member>
+		<member name="capabilities/bluetooth" type="bool" setter="" getter="">
+			[code]bluetooth[/code] device capability.
+		</member>
+		<member name="capabilities/gazeInput" type="bool" setter="" getter="">
+			[code]gazeInput[/code] device capability: eye tracking.
+		</member>
+		<member name="capabilities/internetClient" type="bool" setter="" getter="">
+			Outgoing network access. On by default.
+		</member>
+		<member name="capabilities/internetClientServer" type="bool" setter="" getter="">
+			Incoming network access, needed to listen on a socket. On by default.
+		</member>
+		<member name="capabilities/location" type="bool" setter="" getter="">
+			[code]location[/code] device capability.
+		</member>
+		<member name="capabilities/microphone" type="bool" setter="" getter="">
+			[code]microphone[/code] device capability.
+		</member>
+		<member name="capabilities/privateNetworkClientServer" type="bool" setter="" getter="">
+			Access to the local network.
+		</member>
+		<member name="capabilities/spatialPerception" type="bool" setter="" getter="">
+			[code]spatialPerception[/code] capability: spatial mapping on the HoloLens.
+		</member>
+		<member name="capabilities/webcam" type="bool" setter="" getter="">
+			[code]webcam[/code] device capability.
+		</member>
+		<member name="command_line/extra_args" type="String" setter="" getter="">
+			Command line arguments passed to the exported project, space separated.
+		</member>
+		<member name="custom_template/debug" type="String" setter="" getter="">
+			Path to a custom debug template zip, instead of [code]uwp_arm64_debug.zip[/code] from the export templates.
+		</member>
+		<member name="custom_template/release" type="String" setter="" getter="">
+			Path to a custom release template zip, instead of [code]uwp_arm64_release.zip[/code] from the export templates.
+		</member>
+		<member name="images/background_color" type="String" setter="" getter="">
+			Tile background color: [code]transparent[/code] or [code]#rrggbb[/code].
+		</member>
+		<member name="images/splash_screen" type="String" setter="" getter="">
+			Splash screen, a 620x300 PNG. Empty keeps the template's.
+		</member>
+		<member name="images/square44x44_logo" type="String" setter="" getter="">
+			App list logo, a 44x44 PNG. Empty keeps the template's.
+		</member>
+		<member name="images/square150x150_logo" type="String" setter="" getter="">
+			Tile logo, a 150x150 PNG. Empty keeps the template's.
+		</member>
+		<member name="images/store_logo" type="String" setter="" getter="">
+			Store logo, a 50x50 PNG. Empty keeps the template's.
+		</member>
+		<member name="package/description" type="String" setter="" getter="">
+			Application description.
+		</member>
+		<member name="package/display_name" type="String" setter="" getter="">
+			Application display name. Empty uses [member ProjectSettings.application/config/name].
+		</member>
+		<member name="package/publisher" type="String" setter="" getter="">
+			Package publisher, the subject of the signing certificate ([code]CN=...[/code]). Required.
+		</member>
+		<member name="package/publisher_display_name" type="String" setter="" getter="">
+			Publisher display name. Required.
+		</member>
+		<member name="package/unique_name" type="String" setter="" getter="">
+			Package identity name, 3 to 50 letters, digits, dots and dashes ([code]Company.GameName[/code]). Required.
+		</member>
+		<member name="signing/certificate" type="String" setter="" getter="">
+			Path to the signing certificate ([code].pfx[/code]). Empty leaves the package unsigned, which no device installs. Can be overridden by the [code]GODOT_UWP_SIGNING_CERTIFICATE[/code] environment variable.
+		</member>
+		<member name="signing/password" type="String" setter="" getter="">
+			Password of the signing certificate. Can be overridden by the [code]GODOT_UWP_SIGNING_PASSWORD[/code] environment variable.
+		</member>
+		<member name="texture_format/etc2_astc" type="bool" setter="" getter="">
+			If [code]true[/code], project textures are exported in the ETC2/ASTC format.
+		</member>
+		<member name="texture_format/s3tc_bptc" type="bool" setter="" getter="">
+			If [code]true[/code], project textures are exported in the S3TC/BPTC format, which the HoloLens 2's D3D12 driver reads.
+		</member>
+		<member name="version/build" type="int" setter="" getter="">
+			Package version, third number.
+		</member>
+		<member name="version/major" type="int" setter="" getter="">
+			Package version, first number.
+		</member>
+		<member name="version/minor" type="int" setter="" getter="">
+			Package version, second number.
+		</member>
+		<member name="version/revision" type="int" setter="" getter="">
+			Package version, fourth number.
+		</member>
+	</members>
+</class>
